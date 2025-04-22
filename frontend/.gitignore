@@ -1,0 +1,45 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build output
+.next/
+out/
+dist/
+build/
+.nuxt/
+.output/
+
+# Cache
+.cache/
+.npm/
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+coverage/
+
+# Misc
+*.log
+logs/
+*.local
+
+# Debug
+.debug/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

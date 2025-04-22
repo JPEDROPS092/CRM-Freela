@@ -1,0 +1,41 @@
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/vendor/
+/bin/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+
+# Log files
+*.log
+logs/
+
+# Binary files
+dist/
+build/
+
+# Database
+*.db
+*.sqlite
+
+# Air live reload
+tmp/
