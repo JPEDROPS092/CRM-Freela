@@ -1,12 +1,12 @@
-&lt;template>
-  &lt;form @submit.prevent="handleSubmit" class="space-y-4">
-    &lt;div>
-      &lt;label for="amount" class="block text-sm font-medium text-gray-700">Valor&lt;/label>
-      &lt;div class="mt-1 relative rounded-md shadow-sm">
-        &lt;div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          &lt;span class="text-gray-500 sm:text-sm">R$&lt;/span>
-        &lt;/div>
-        &lt;input
+<template>
+  <form @submit.prevent="handleSubmit" class="space-y-4">
+    <div>
+      <label for="amount" class="block text-sm font-medium text-gray-700">Valor</label>
+      <div class="mt-1 relative rounded-md shadow-sm">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="text-gray-500 sm:text-sm">R$</span>
+        </div>
+        <input
           type="number"
           id="amount"
           v-model="form.amount"
@@ -15,96 +15,96 @@
           min="0"
           class="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
         />
-      &lt;/div>
-    &lt;/div>
+      </div>
+    </div>
 
-    &lt;div>
-      &lt;label for="description" class="block text-sm font-medium text-gray-700">Descrição&lt;/label>
-      &lt;textarea
+    <div>
+      <label for="description" class="block text-sm font-medium text-gray-700">Descrição</label>
+      <textarea
         id="description"
         v-model="form.description"
         required
         rows="3"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-      >&lt;/textarea>
-    &lt;/div>
+      ></textarea>
+    </div>
 
-    &lt;div>
-      &lt;label for="due_date" class="block text-sm font-medium text-gray-700">Data de Vencimento&lt;/label>
-      &lt;input
+    <div>
+      <label for="due_date" class="block text-sm font-medium text-gray-700">Data de Vencimento</label>
+      <input
         type="date"
         id="due_date"
         v-model="form.due_date"
         required
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
       />
-    &lt;/div>
+    </div>
 
-    &lt;div>
-      &lt;label for="status" class="block text-sm font-medium text-gray-700">Status&lt;/label>
-      &lt;select
+    <div>
+      <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+      <select
         id="status"
         v-model="form.status"
         required
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
       >
-        &lt;option value="pending">Pendente&lt;/option>
-        &lt;option value="paid">Pago&lt;/option>
-        &lt;option value="cancelled">Cancelado&lt;/option>
-        &lt;option value="overdue">Vencido&lt;/option>
-      &lt;/select>
-    &lt;/div>
+        <option value="pending">Pendente</option>
+        <option value="paid">Pago</option>
+        <option value="cancelled">Cancelado</option>
+        <option value="overdue">Vencido</option>
+      </select>
+    </div>
 
-    &lt;div>
-      &lt;label for="client_id" class="block text-sm font-medium text-gray-700">Cliente&lt;/label>
-      &lt;select
+    <div>
+      <label for="client_id" class="block text-sm font-medium text-gray-700">Cliente</label>
+      <select
         id="client_id"
         v-model="form.client_id"
         required
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
         @change="loadClientTasks"
       >
-        &lt;option value="">Selecione um cliente&lt;/option>
-        &lt;option v-for="client in clients" :key="client.id" :value="client.id">
+        <option value="">Selecione um cliente</option>
+        <option v-for="client in clients" :key="client.id" :value="client.id">
           {{ client.name }}
-        &lt;/option>
-      &lt;/select>
-    &lt;/div>
+        </option>
+      </select>
+    </div>
 
-    &lt;div v-if="form.client_id">
-      &lt;label for="task_id" class="block text-sm font-medium text-gray-700">Tarefa (opcional)&lt;/label>
-      &lt;select
+    <div v-if="form.client_id">
+      <label for="task_id" class="block text-sm font-medium text-gray-700">Tarefa (opcional)</label>
+      <select
         id="task_id"
         v-model="form.task_id"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
       >
-        &lt;option value="">Nenhuma tarefa&lt;/option>
-        &lt;option v-for="task in clientTasks" :key="task.id" :value="task.id">
+        <option value="">Nenhuma tarefa</option>
+        <option v-for="task in clientTasks" :key="task.id" :value="task.id">
           {{ task.title }}
-        &lt;/option>
-      &lt;/select>
-    &lt;/div>
+        </option>
+      </select>
+    </div>
 
-    &lt;div class="flex justify-end space-x-3">
-      &lt;button
+    <div class="flex justify-end space-x-3">
+      <button
         type="button"
         @click="$emit('cancel')"
         class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
       >
         Cancelar
-      &lt;/button>
-      &lt;button
+      </button>
+      <button
         type="submit"
         class="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary-dark"
         :disabled="loading"
       >
         {{ loading ? 'Salvando...' : buttonText }}
-      &lt;/button>
-    &lt;/div>
-  &lt;/form>
-&lt;/template>
+      </button>
+    </div>
+  </form>
+</template>
 
-&lt;script setup lang="ts">
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { usePaymentsStore } from '~/store/payments'
 import { useClientsStore } from '~/store/clients'
@@ -193,4 +193,4 @@ onMounted(async () => {
     console.error('Erro ao carregar dados iniciais:', error)
   }
 })
-&lt;/script>
+</script>

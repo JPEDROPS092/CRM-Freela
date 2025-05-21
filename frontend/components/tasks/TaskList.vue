@@ -1,199 +1,206 @@
-&lt;template>
-  &lt;div class="space-y-4">
-    &lt;div class="flex justify-between items-center">
-      &lt;h2 class="text-lg font-semibold text-gray-900">{{ title }}&lt;/h2>
-      &lt;button
+<template>
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold text-gray-900">{{ title }}</h2>
+      <button
         v-if="showAddButton"
         @click="$emit('add')"
-        class="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary-dark"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
       >
         Adicionar Tarefa
-      &lt;/button>
-    &lt;/div>
+      </button>
+    </div>
 
-    &lt;div class="bg-white shadow overflow-hidden sm:rounded-md">
-      &lt;ul v-if="tasks.length > 0" class="divide-y divide-gray-200">
-        &lt;li v-for="task in tasks" :key="task.id" class="hover:bg-gray-50">
-          &lt;div class="px-4 py-4 sm:px-6">
-            &lt;div class="flex items-center justify-between">
-              &lt;div class="flex-1 min-w-0">
-                &lt;div class="flex items-center">
-                  &lt;p class="text-sm font-medium text-primary truncate">
-                    {{ task.title }}
-                  &lt;/p>
-                  &lt;span
-                    :class="{
-                      'ml-2 px-2 py-1 text-xs font-medium rounded-full': true,
-                      'bg-yellow-100 text-yellow-800': task.priority === 'high',
-                      'bg-blue-100 text-blue-800': task.priority === 'medium',
-                      'bg-gray-100 text-gray-800': task.priority === 'low'
-                    }"
-                  >
-                    {{ getPriorityLabel(task.priority) }}
-                  &lt;/span>
-                &lt;/div>
-                &lt;p v-if="task.description" class="mt-1 text-sm text-gray-500 line-clamp-2">
-                  {{ task.description }}
-                &lt;/p>
-              &lt;/div>
-              &lt;div class="ml-4 flex items-center space-x-3">
-                &lt;span
-                  :class="{
-                    'px-2 py-1 text-xs font-medium rounded-full': true,
-                    'bg-blue-100 text-blue-800': task.status === 'pending',
-                    'bg-yellow-100 text-yellow-800': task.status === 'in_progress',
-                    'bg-green-100 text-green-800': task.status === 'completed',
-                    'bg-red-100 text-red-800': task.status === 'cancelled'
-                  }"
-                >
-                  {{ getStatusLabel(task.status) }}
-                &lt;/span>
-                &lt;div class="flex items-center space-x-2">
-                  &lt;button
-                    @click="$emit('edit', task)"
-                    class="text-primary hover:text-primary-dark"
-                  >
-                    &lt;span class="sr-only">Editar&lt;/span>
-                    &lt;svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      &lt;path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      />
-                    &lt;/svg>
-                  &lt;/button>
-                  &lt;button
-                    @click="$emit('delete', task)"
-                    class="text-red-600 hover:text-red-800"
-                  >
-                    &lt;span class="sr-only">Excluir&lt;/span>
-                    &lt;svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      &lt;path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    &lt;/svg>
-                  &lt;/button>
-                &lt;/div>
-              &lt;/div>
-            &lt;/div>
-            &lt;div class="mt-2 sm:flex sm:justify-between">
-              &lt;div class="sm:flex">
-                &lt;p class="flex items-center text-sm text-gray-500">
-                  &lt;svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    &lt;path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  &lt;/svg>
-                  {{ task.client?.name || 'Cliente não especificado' }}
-                &lt;/p>
-              &lt;/div>
-              &lt;div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                &lt;svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  &lt;path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                &lt;/svg>
-                Entrega: {{ formatDate(task.due_date) }}
-              &lt;/div>
-            &lt;/div>
-          &lt;/div>
-        &lt;/li>
-      &lt;/ul>
-      &lt;div v-else class="p-4 text-center text-gray-500">
-        Nenhuma tarefa encontrada
-      &lt;/div>
-    &lt;/div>
+    <div v-if="tasks.length === 0" class="text-center py-10">
+      <p class="text-gray-500">Nenhuma tarefa encontrada.</p>
+    </div>
 
-    &lt;div v-if="showPagination && totalPages > 1" class="flex justify-center mt-4">
-      &lt;nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-        &lt;button
+    <div v-else class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Entrega</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridade</th>
+            <th scope="col" class="relative px-6 py-3">
+              <span class="sr-only">Ações</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="task in tasks" :key="task.id">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              {{ task.title }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ task.client_name }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ formatDate(task.due_date) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                :class="{
+                  'bg-green-100 text-green-800': task.status === 'completed',
+                  'bg-yellow-100 text-yellow-800': task.status === 'in_progress',
+                  'bg-gray-100 text-gray-800': task.status === 'pending',
+                  'bg-red-100 text-red-800': task.status === 'cancelled'
+                }"
+              >
+                {{ getStatusLabel(task.status) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                :class="{
+                  'bg-red-100 text-red-800': task.priority === 'high',
+                  'bg-yellow-100 text-yellow-800': task.priority === 'medium',
+                  'bg-green-100 text-green-800': task.priority === 'low'
+                }"
+              >
+                {{ getPriorityLabel(task.priority) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <button
+                @click="$emit('edit', task)"
+                class="text-primary hover:text-primary-dark mr-3"
+              >
+                Editar
+              </button>
+              <button
+                @click="$emit('delete', task)"
+                class="text-red-600 hover:text-red-900"
+              >
+                Excluir
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginação -->
+    <div v-if="showPagination && totalPages > 1" class="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
+      <div class="flex flex-1 justify-between sm:hidden">
+        <button
           @click="$emit('page-change', currentPage - 1)"
           :disabled="currentPage === 1"
-          class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-          :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
+          :class="[
+            currentPage === 1 ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50',
+            'relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700'
+          ]"
         >
           Anterior
-        &lt;/button>
-        &lt;button
-          v-for="page in totalPages"
-          :key="page"
-          @click="$emit('page-change', page)"
-          class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium"
-          :class="page === currentPage ? 'text-primary bg-primary-50' : 'text-gray-700 hover:bg-gray-50'"
-        >
-          {{ page }}
-        &lt;/button>
-        &lt;button
+        </button>
+        <button
           @click="$emit('page-change', currentPage + 1)"
           :disabled="currentPage === totalPages"
-          class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-          :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }"
+          :class="[
+            currentPage === totalPages ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50',
+            'relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700'
+          ]"
         >
-          Próxima
-        &lt;/button>
-      &lt;/nav>
-    &lt;/div>
-  &lt;/div>
-&lt;/template>
+          Próximo
+        </button>
+      </div>
+      <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            Mostrando <span class="font-medium">{{ (currentPage - 1) * 10 + 1 }}</span> a
+            <span class="font-medium">{{ Math.min(currentPage * 10, totalItems) }}</span> de
+            <span class="font-medium">{{ totalItems }}</span> resultados
+          </p>
+        </div>
+        <div>
+          <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <button
+              @click="$emit('page-change', currentPage - 1)"
+              :disabled="currentPage === 1"
+              class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+              :class="{ 'cursor-not-allowed opacity-50': currentPage === 1 }"
+            >
+              <span class="sr-only">Anterior</span>
+              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button
+              @click="$emit('page-change', currentPage + 1)"
+              :disabled="currentPage === totalPages"
+              class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+              :class="{ 'cursor-not-allowed opacity-50': currentPage === totalPages }"
+            >
+              <span class="sr-only">Próximo</span>
+              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
-&lt;script setup lang="ts">
-defineProps<{
-  title?: string
-  tasks: Array<{
-    id: number
-    title: string
-    description: string
-    due_date: string
-    status: string
-    priority: string
-    client?: {
-      id: number
-      name: string
-    }
-  }>
-  showAddButton?: boolean
-  showPagination?: boolean
-  currentPage?: number
-  totalPages?: number
+<script setup lang="ts">
+import { defineProps, defineEmits } from 'vue'
+
+interface Task {
+  id: number;
+  title: string;
+  client_name: string;
+  due_date: string;
+  status: string;
+  priority: string;
+}
+
+const props = defineProps<{
+  title?: string;
+  tasks: Task[];
+  showAddButton?: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  showPagination?: boolean;
 }>()
 
-defineEmits<{
-  (e: 'add'): void
-  (e: 'edit', task: any): void
-  (e: 'delete', task: any): void
-  (e: 'page-change', page: number): void
+const emit = defineEmits<{
+  (e: 'add'): void;
+  (e: 'edit', task: Task): void;
+  (e: 'delete', task: Task): void;
+  (e: 'page-change', page: number): void;
 }>()
 
-const getStatusLabel = (status: string) => {
-  const labels = {
+// Formatar data para o formato brasileiro
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat('pt-BR').format(date)
+}
+
+// Obter rótulo de status
+const getStatusLabel = (status: string): string => {
+  const statusMap: Record<string, string> = {
     pending: 'Pendente',
     in_progress: 'Em Andamento',
     completed: 'Concluída',
     cancelled: 'Cancelada'
   }
-  return labels[status as keyof typeof labels] || status
+  return statusMap[status] || status
 }
 
-const getPriorityLabel = (priority: string) => {
-  const labels = {
+// Obter rótulo de prioridade
+const getPriorityLabel = (priority: string): string => {
+  const priorityMap: Record<string, string> = {
     low: 'Baixa',
     medium: 'Média',
     high: 'Alta'
   }
-  return labels[priority as keyof typeof labels] || priority
+  return priorityMap[priority] || priority
 }
-
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('pt-BR')
-}
-&lt;/script>
+</script>

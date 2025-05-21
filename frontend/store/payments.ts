@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useRuntimeConfig } from '#app'
 
 interface Payment {
   id: number
@@ -26,12 +27,22 @@ interface PaymentSummary {
   total: number
 }
 
+interface PaymentStats {
+  total: number
+  pending: number
+  paid: number
+  overdue: number
+  cancelled: number
+  monthlyRevenue: number
+}
+
 interface PaymentsState {
   payments: Payment[]
   currentPayment: Payment | null
   totalPayments: number
   overduePayments: Payment[]
   summary: PaymentSummary | null
+  stats: PaymentStats
   loading: boolean
   error: string | null
 }
@@ -43,6 +54,14 @@ export const usePaymentsStore = defineStore('payments', {
     totalPayments: 0,
     overduePayments: [],
     summary: null,
+    stats: {
+      total: 0,
+      pending: 0,
+      paid: 0,
+      overdue: 0,
+      cancelled: 0,
+      monthlyRevenue: 0
+    },
     loading: false,
     error: null
   }),
@@ -53,6 +72,7 @@ export const usePaymentsStore = defineStore('payments', {
     getTotalPayments: (state) => state.totalPayments,
     getOverduePayments: (state) => state.overduePayments,
     getSummary: (state) => state.summary,
+    getStats: (state) => state.stats,
     isLoading: (state) => state.loading,
     getError: (state) => state.error
   },
@@ -76,15 +96,21 @@ export const usePaymentsStore = defineStore('payments', {
         })
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar pagamentos')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar pagamentos')
         }
 
         const data = await response.json()
-        this.payments = data.payments
-        this.totalPayments = data.total
+        this.payments = data.data || []
+        this.totalPayments = data.meta?.total || 0
         
+        return {
+          payments: this.payments,
+          totalPages: Math.ceil(this.totalPayments / pageSize)
+        }
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -106,14 +132,17 @@ export const usePaymentsStore = defineStore('payments', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar pagamento')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar pagamento')
         }
 
         const data = await response.json()
         this.currentPayment = data
         
+        return this.currentPayment
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -138,15 +167,24 @@ export const usePaymentsStore = defineStore('payments', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao criar pagamento')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao criar pagamento')
         }
 
         const data = await response.json()
-        this.payments.push(data.payment)
-        this.totalPayments++
         
+        // Atualiza as estatísticas
+        this.stats.total++
+        if (paymentData.status === 'pending') this.stats.pending++
+        else if (paymentData.status === 'paid') {
+          this.stats.paid++
+          this.stats.monthlyRevenue += paymentData.amount
+        }
+        
+        return data
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -171,17 +209,20 @@ export const usePaymentsStore = defineStore('payments', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao atualizar pagamento')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao atualizar pagamento')
         }
 
         const data = await response.json()
-        const index = this.payments.findIndex(p => p.id === id)
+        const index = this.payments.findIndex((p: Payment) => p.id === id)
         if (index !== -1) {
-          this.payments[index] = data.payment
+          this.payments[index] = data
         }
         
+        return data
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -204,14 +245,30 @@ export const usePaymentsStore = defineStore('payments', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao excluir pagamento')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao excluir pagamento')
         }
 
-        this.payments = this.payments.filter(p => p.id !== id)
-        this.totalPayments--
+        // Remove o pagamento da lista
+        const paymentToRemove = this.payments.find((p: Payment) => p.id === id)
+        this.payments = this.payments.filter((p: Payment) => p.id !== id)
         
+        // Atualiza as estatísticas
+        if (paymentToRemove) {
+          this.stats.total--
+          if (paymentToRemove.status === 'pending') this.stats.pending--
+          else if (paymentToRemove.status === 'paid') {
+            this.stats.paid--
+            this.stats.monthlyRevenue -= paymentToRemove.amount
+          }
+          else if (paymentToRemove.status === 'overdue') this.stats.overdue--
+          else if (paymentToRemove.status === 'cancelled') this.stats.cancelled--
+        }
+        
+        return true
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -233,14 +290,17 @@ export const usePaymentsStore = defineStore('payments', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar pagamentos vencidos')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar pagamentos vencidos')
         }
 
         const data = await response.json()
-        this.overduePayments = data.payments
+        this.overduePayments = data.payments || []
         
+        return this.overduePayments
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -262,14 +322,56 @@ export const usePaymentsStore = defineStore('payments', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar resumo de pagamentos')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar resumo de pagamentos')
         }
 
         const data = await response.json()
         this.summary = data
         
+        return this.summary
       } catch (error: any) {
         this.error = error.message
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async fetchStats() {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const config = useRuntimeConfig()
+        const response = await fetch(
+          `${config.public.apiBase}/payments/stats`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+          }
+        )
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar estatísticas de pagamentos')
+        }
+
+        const data = await response.json()
+        this.stats = data
+        
+        return this.stats
+      } catch (error: any) {
+        this.error = error.message
+        return {
+          total: 0,
+          pending: 0,
+          paid: 0,
+          overdue: 0,
+          cancelled: 0,
+          monthlyRevenue: 0
+        }
       } finally {
         this.loading = false
       }

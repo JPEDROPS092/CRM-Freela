@@ -1,19 +1,19 @@
-&lt;template>
-  &lt;NuxtLayout name="auth">
-    &lt;template #title>
+<template>
+  <NuxtLayout name="auth">
+    <template #title>
       Recuperar Senha
-    &lt;/template>
+    </template>
     
-    &lt;div class="space-y-6">
-      &lt;p class="text-sm text-gray-600">
+    <div class="space-y-6">
+      <p class="text-sm text-gray-600">
         Digite seu e-mail e enviaremos instruções para redefinir sua senha.
-      &lt;/p>
+      </p>
 
-      &lt;form @submit.prevent="handleSubmit" class="space-y-6">
-        &lt;div>
-          &lt;label for="email" class="form-label">Email&lt;/label>
-          &lt;div class="mt-1">
-            &lt;input 
+      <form @submit.prevent="handleSubmit" class="space-y-6">
+        <div>
+          <label for="email" class="form-label">Email</label>
+          <div class="mt-1">
+            <input 
               id="email" 
               v-model="email" 
               name="email" 
@@ -23,34 +23,34 @@
               class="form-input" 
               :class="{ 'border-danger-500 focus:ring-danger-500 focus:border-danger-500': error }"
             />
-            &lt;p v-if="error" class="form-error">{{ error }}&lt;/p>
-          &lt;/div>
-        &lt;/div>
+            <p v-if="error" class="form-error">{{ error }}</p>
+          </div>
+        </div>
 
-        &lt;div>
-          &lt;button 
+        <div>
+          <button 
             type="submit" 
             class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             :disabled="loading"
           >
             {{ loading ? 'Enviando...' : 'Enviar instruções' }}
-          &lt;/button>
-        &lt;/div>
-      &lt;/form>
-    &lt;/div>
+          </button>
+        </div>
+      </form>
+    </div>
     
-    &lt;template #footer>
-      &lt;p class="text-sm text-gray-600">
+    <template #footer>
+      <p class="text-sm text-gray-600">
         Lembrou sua senha?
-        &lt;NuxtLink to="/auth/login" class="font-medium text-primary-600 hover:text-primary-500">
+        <NuxtLink to="/auth/login" class="font-medium text-primary-600 hover:text-primary-500">
           Voltar para login
-        &lt;/NuxtLink>
-      &lt;/p>
-    &lt;/template>
-  &lt;/NuxtLayout>
-&lt;/template>
+        </NuxtLink>
+      </p>
+    </template>
+  </NuxtLayout>
+</template>
 
-&lt;script setup lang="ts">
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useAuthStore } from '~/store/auth'
 
@@ -79,4 +79,4 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
-&lt;/script>
+</script>

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -9,6 +10,7 @@ import (
 	"github.com/jpcode092/crm-freela/internal/models"
 	"github.com/jpcode092/crm-freela/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // Claims representa os claims do JWT
@@ -45,7 +47,7 @@ func NewAuthService(userRepo models.UserRepository, logger logger.Logger, config
 func (s *authService) Register(name, email, password string) (*models.User, error) {
 	// Verifica se o email já está em uso
 	existingUser, err := s.userRepo.GetByEmail(email)
-	if err != nil && err != models.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 	if existingUser != nil {

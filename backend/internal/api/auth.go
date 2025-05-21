@@ -59,15 +59,21 @@ func NewAuthHandler(authService services.AuthService, logger logger.Logger) *Aut
 // @Failure      500  {object}  map[string]interface{} "Erro interno"
 // @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
+	h.logger.Info("Recebida requisição de registro")
+	
 	var req AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("Erro ao processar dados de registro: " + err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos", "details": err.Error()})
 		return
 	}
+	
+	h.logger.Info("Processando registro para email: " + req.Email)
 
 	user, err := h.authService.Register(req.Name, req.Email, req.Password)
 	if err != nil {
 		if err == errors.ErrEmailInUse {
+			h.logger.Warn("Tentativa de registro com email já cadastrado: " + req.Email)
 			c.JSON(http.StatusConflict, gin.H{"error": "E-mail já cadastrado"})
 			return
 		}
@@ -76,12 +82,31 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Gera um token para o usuário recém-registrado
+	_, token, err := h.authService.Login(req.Email, req.Password)
+	if err != nil {
+		h.logger.Error("Erro ao gerar token após registro: " + err.Error())
+		// Mesmo que não consiga gerar o token, o registro foi bem-sucedido
+		c.JSON(http.StatusCreated, gin.H{
+			"message": "Usuário registrado com sucesso, mas não foi possível gerar o token",
+			"user": gin.H{
+				"id":    user.ID,
+				"name":  user.Name,
+				"email": user.Email,
+			},
+		})
+		return
+	}
+
+	h.logger.Info("Usuário registrado com sucesso: " + user.Email)
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Usuário registrado com sucesso",
+		"token":   token,
 		"user": gin.H{
 			"id":    user.ID,
 			"name":  user.Name,
 			"email": user.Email,
+			"plan":  user.Plan,
 		},
 	})
 }
@@ -99,20 +124,28 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // @Failure      500  {object}  map[string]interface{} "Erro interno"
 // @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
+	h.logger.Info("Recebida requisição de login")
+	
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("Erro ao processar dados de login: " + err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos", "details": err.Error()})
 		return
 	}
+	
+	h.logger.Info("Processando login para email: " + req.Email)
 
 	user, token, err := h.authService.Login(req.Email, req.Password)
 	if err != nil {
 		switch err {
 		case errors.ErrUserNotFound:
+			h.logger.Warn("Tentativa de login com usuário não encontrado: " + req.Email)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
 		case errors.ErrInvalidPassword:
+			h.logger.Warn("Tentativa de login com senha inválida: " + req.Email)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Senha inválida"})
 		case errors.ErrUserDeactivated:
+			h.logger.Warn("Tentativa de login com usuário desativado: " + req.Email)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Usuário desativado"})
 		default:
 			h.logger.Error("Erro ao fazer login: " + err.Error())
@@ -121,6 +154,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	h.logger.Info("Login realizado com sucesso: " + user.Email)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login realizado com sucesso",
 		"token":   token,
@@ -155,10 +189,13 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	if err != nil {
 		switch err {
 		case errors.ErrInvalidToken:
+			h.logger.Warn("Tentativa de renovar token inválido: " + token)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token inválido"})
 		case errors.ErrTokenExpired:
+			h.logger.Warn("Tentativa de renovar token expirado: " + token)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token expirado"})
 		case errors.ErrUserDeactivated:
+			h.logger.Warn("Tentativa de renovar token com usuário desativado: " + token)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Usuário desativado"})
 		default:
 			h.logger.Error("Erro ao renovar token: " + err.Error())
@@ -167,6 +204,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
+	h.logger.Info("Token renovado com sucesso: " + newToken)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Token renovado com sucesso",
 		"token":   newToken,
@@ -202,6 +240,7 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
+	h.logger.Info("Perfil do usuário obtido com sucesso: " + user.Email)
 	c.JSON(http.StatusOK, gin.H{
 		"user": gin.H{
 			"id":    user.ID,

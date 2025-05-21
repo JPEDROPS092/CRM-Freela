@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useRuntimeConfig } from '#app'
 
 interface Client {
   id: number
@@ -12,11 +13,19 @@ interface Client {
   updated_at: string
 }
 
+interface ClientStats {
+  total: number
+  active: number
+  inactive: number
+  archived: number
+}
+
 interface ClientsState {
   clients: Client[]
   currentClient: Client | null
   totalClients: number
   activeClients: number
+  stats: ClientStats
   loading: boolean
   error: string | null
 }
@@ -27,6 +36,12 @@ export const useClientsStore = defineStore('clients', {
     currentClient: null,
     totalClients: 0,
     activeClients: 0,
+    stats: {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      archived: 0
+    },
     loading: false,
     error: null
   }),
@@ -36,19 +51,24 @@ export const useClientsStore = defineStore('clients', {
     getCurrentClient: (state) => state.currentClient,
     getTotalClients: (state) => state.totalClients,
     getActiveClients: (state) => state.activeClients,
+    getStats: (state) => state.stats,
     isLoading: (state) => state.loading,
     getError: (state) => state.error
   },
 
   actions: {
-    async fetchClients(page: number = 1, pageSize: number = 10) {
+    async fetchClients(page: number = 1, pageSize: number = 10, search?: string, status?: string) {
       this.loading = true
       this.error = null
       
       try {
         const config = useRuntimeConfig()
+        let url = `${config.public.apiBase}/clients?page=${page}&page_size=${pageSize}`
+        if (search) url += `&search=${encodeURIComponent(search)}`
+        if (status) url += `&status=${status}`
+        
         const response = await fetch(
-          `${config.public.apiBase}/clients?page=${page}&page_size=${pageSize}`,
+          url,
           {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -57,15 +77,21 @@ export const useClientsStore = defineStore('clients', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar clientes')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar clientes')
         }
 
         const data = await response.json()
-        this.clients = data.clients
-        this.totalClients = data.total
+        this.clients = data.data || []
+        this.totalClients = data.meta?.total || 0
         
+        return {
+          clients: this.clients,
+          totalPages: Math.ceil(this.totalClients / pageSize)
+        }
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -87,14 +113,17 @@ export const useClientsStore = defineStore('clients', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar cliente')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar cliente')
         }
 
         const data = await response.json()
         this.currentClient = data
         
+        return this.currentClient
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -119,18 +148,22 @@ export const useClientsStore = defineStore('clients', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao criar cliente')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao criar cliente')
         }
 
         const data = await response.json()
-        this.clients.push(data.client)
-        this.totalClients++
-        if (data.client.status === 'active') {
-          this.activeClients++
-        }
         
+        // Atualiza as estatísticas
+        this.stats.total++
+        if (clientData.status === 'active') this.stats.active++
+        else if (clientData.status === 'inactive') this.stats.inactive++
+        else if (clientData.status === 'archived') this.stats.archived++
+        
+        return data
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -155,17 +188,33 @@ export const useClientsStore = defineStore('clients', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao atualizar cliente')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao atualizar cliente')
         }
 
         const data = await response.json()
-        const index = this.clients.findIndex(c => c.id === id)
+        const index = this.clients.findIndex((c: Client) => c.id === id)
         if (index !== -1) {
-          this.clients[index] = data.client
+          // Se o status mudou, atualiza as estatísticas
+          if (clientData.status && this.clients[index].status !== clientData.status) {
+            // Decrementa o contador do status antigo
+            if (this.clients[index].status === 'active') this.stats.active--
+            else if (this.clients[index].status === 'inactive') this.stats.inactive--
+            else if (this.clients[index].status === 'archived') this.stats.archived--
+            
+            // Incrementa o contador do novo status
+            if (clientData.status === 'active') this.stats.active++
+            else if (clientData.status === 'inactive') this.stats.inactive++
+            else if (clientData.status === 'archived') this.stats.archived++
+          }
+          
+          this.clients[index] = data
         }
         
+        return data
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -188,27 +237,39 @@ export const useClientsStore = defineStore('clients', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao excluir cliente')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao excluir cliente')
         }
 
-        this.clients = this.clients.filter(c => c.id !== id)
-        this.totalClients--
+        // Remove o cliente da lista
+        const clientToRemove = this.clients.find((c: Client) => c.id === id)
+        this.clients = this.clients.filter((c: Client) => c.id !== id)
         
+        // Atualiza as estatísticas
+        if (clientToRemove) {
+          this.stats.total--
+          if (clientToRemove.status === 'active') this.stats.active--
+          else if (clientToRemove.status === 'inactive') this.stats.inactive--
+          else if (clientToRemove.status === 'archived') this.stats.archived--
+        }
+        
+        return true
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
     },
-
-    async fetchActiveClientsCount() {
+    
+    async fetchStats() {
       this.loading = true
       this.error = null
       
       try {
         const config = useRuntimeConfig()
         const response = await fetch(
-          `${config.public.apiBase}/clients/count/active`,
+          `${config.public.apiBase}/clients/stats`,
           {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -217,14 +278,22 @@ export const useClientsStore = defineStore('clients', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar contagem de clientes ativos')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar estatísticas de clientes')
         }
 
         const data = await response.json()
-        this.activeClients = data.count
+        this.stats = data
         
+        return this.stats
       } catch (error: any) {
         this.error = error.message
+        return {
+          total: 0,
+          active: 0,
+          inactive: 0,
+          archived: 0
+        }
       } finally {
         this.loading = false
       }

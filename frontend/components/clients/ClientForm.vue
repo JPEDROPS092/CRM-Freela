@@ -1,89 +1,89 @@
-&lt;template>
-  &lt;form @submit.prevent="handleSubmit" class="space-y-4">
-    &lt;div>
-      &lt;label for="name" class="block text-sm font-medium text-gray-700">Nome&lt;/label>
-      &lt;input
+<template>
+  <form @submit.prevent="handleSubmit" class="space-y-4">
+    <div>
+      <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
+      <input
         type="text"
         id="name"
         v-model="form.name"
         required
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
       />
-    &lt;/div>
+    </div>
 
-    &lt;div>
-      &lt;label for="email" class="block text-sm font-medium text-gray-700">Email&lt;/label>
-      &lt;input
+    <div>
+      <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+      <input
         type="email"
         id="email"
         v-model="form.email"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
       />
-    &lt;/div>
+    </div>
 
-    &lt;div>
-      &lt;label for="phone" class="block text-sm font-medium text-gray-700">Telefone&lt;/label>
-      &lt;input
+    <div>
+      <label for="phone" class="block text-sm font-medium text-gray-700">Telefone</label>
+      <input
         type="tel"
         id="phone"
         v-model="form.phone"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
       />
-    &lt;/div>
+    </div>
 
-    &lt;div>
-      &lt;label for="company" class="block text-sm font-medium text-gray-700">Empresa&lt;/label>
-      &lt;input
+    <div>
+      <label for="company" class="block text-sm font-medium text-gray-700">Empresa</label>
+      <input
         type="text"
         id="company"
         v-model="form.company"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
       />
-    &lt;/div>
+    </div>
 
-    &lt;div>
-      &lt;label for="notes" class="block text-sm font-medium text-gray-700">Observações&lt;/label>
-      &lt;textarea
+    <div>
+      <label for="notes" class="block text-sm font-medium text-gray-700">Observações</label>
+      <textarea
         id="notes"
         v-model="form.notes"
         rows="3"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-      >&lt;/textarea>
-    &lt;/div>
+      ></textarea>
+    </div>
 
-    &lt;div>
-      &lt;label for="status" class="block text-sm font-medium text-gray-700">Status&lt;/label>
-      &lt;select
+    <div>
+      <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+      <select
         id="status"
         v-model="form.status"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
       >
-        &lt;option value="active">Ativo&lt;/option>
-        &lt;option value="inactive">Inativo&lt;/option>
-        &lt;option value="archived">Arquivado&lt;/option>
-      &lt;/select>
-    &lt;/div>
+        <option value="active">Ativo</option>
+        <option value="inactive">Inativo</option>
+        <option value="archived">Arquivado</option>
+      </select>
+    </div>
 
-    &lt;div class="flex justify-end space-x-3">
-      &lt;button
+    <div class="flex justify-end space-x-3">
+      <button
         type="button"
         @click="$emit('cancel')"
         class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
       >
         Cancelar
-      &lt;/button>
-      &lt;button
+      </button>
+      <button
         type="submit"
         class="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary-dark"
         :disabled="loading"
       >
         {{ loading ? 'Salvando...' : buttonText }}
-      &lt;/button>
-    &lt;/div>
-  &lt;/form>
-&lt;/template>
+      </button>
+    </div>
+  </form>
+</template>
 
-&lt;script setup lang="ts">
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useClientsStore } from '~/store/clients'
 
@@ -132,4 +132,4 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
-&lt;/script>
+</script>

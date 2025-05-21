@@ -82,9 +82,16 @@ func main() {
 	// Initialize router
 	router := gin.Default()
 
+	// Add custom logger middleware
+	router.Use(middleware.LoggerMiddleware(logger))
+
 	// Configure CORS
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{os.Getenv("FRONTEND_URL")} // Get from environment variable
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000" // Default frontend URL if not set
+	}
+	config.AllowOrigins = []string{frontendURL}
 	config.AllowCredentials = true
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	router.Use(cors.New(config))

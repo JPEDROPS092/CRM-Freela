@@ -1,0 +1,12 @@
+// ARQUIVO DESATIVADO
+// Este plugin foi desativado porque estava causando conflitos com a configuração CSP no nuxt.config.ts
+// e impedindo a comunicação entre o frontend e o backend.
+
+import { defineNuxtPlugin } from 'nuxt/app'
+
+export default defineNuxtPlugin(() => {
+  // Plugin desativado
+  console.log('Plugin CSP desativado para permitir comunicação com o backend')
+  
+  // Não adicionamos mais a meta tag CSP aqui, pois a configuração é feita no nuxt.config.ts
+})

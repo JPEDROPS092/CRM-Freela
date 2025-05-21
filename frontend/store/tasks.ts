@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useRuntimeConfig } from '#app'
 
 interface Task {
   id: number
@@ -16,11 +17,20 @@ interface Task {
   updated_at: string
 }
 
+interface TaskStats {
+  total: number
+  pending: number
+  in_progress: number
+  completed: number
+  cancelled: number
+}
+
 interface TasksState {
   tasks: Task[]
   currentTask: Task | null
   totalTasks: number
   upcomingTasks: Task[]
+  stats: TaskStats
   loading: boolean
   error: string | null
 }
@@ -31,6 +41,13 @@ export const useTasksStore = defineStore('tasks', {
     currentTask: null,
     totalTasks: 0,
     upcomingTasks: [],
+    stats: {
+      total: 0,
+      pending: 0,
+      in_progress: 0,
+      completed: 0,
+      cancelled: 0
+    },
     loading: false,
     error: null
   }),
@@ -40,6 +57,7 @@ export const useTasksStore = defineStore('tasks', {
     getCurrentTask: (state) => state.currentTask,
     getTotalTasks: (state) => state.totalTasks,
     getUpcomingTasks: (state) => state.upcomingTasks,
+    getStats: (state) => state.stats,
     isLoading: (state) => state.loading,
     getError: (state) => state.error
   },
@@ -62,15 +80,21 @@ export const useTasksStore = defineStore('tasks', {
         })
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar tarefas')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar tarefas')
         }
 
         const data = await response.json()
-        this.tasks = data.tasks
-        this.totalTasks = data.total
+        this.tasks = data.data || []
+        this.totalTasks = data.meta?.total || 0
         
+        return {
+          tasks: this.tasks,
+          totalPages: Math.ceil(this.totalTasks / pageSize)
+        }
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -92,14 +116,17 @@ export const useTasksStore = defineStore('tasks', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar tarefa')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar tarefa')
         }
 
         const data = await response.json()
         this.currentTask = data
         
+        return this.currentTask
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -124,15 +151,21 @@ export const useTasksStore = defineStore('tasks', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao criar tarefa')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao criar tarefa')
         }
 
         const data = await response.json()
-        this.tasks.push(data.task)
-        this.totalTasks++
         
+        // Atualiza as estatísticas
+        this.stats.total++
+        if (taskData.status === 'pending') this.stats.pending++
+        else if (taskData.status === 'in_progress') this.stats.in_progress++
+        
+        return data
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -157,17 +190,20 @@ export const useTasksStore = defineStore('tasks', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao atualizar tarefa')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao atualizar tarefa')
         }
 
         const data = await response.json()
-        const index = this.tasks.findIndex(t => t.id === id)
+        const index = this.tasks.findIndex((t: Task) => t.id === id)
         if (index !== -1) {
-          this.tasks[index] = data.task
+          this.tasks[index] = data
         }
         
+        return data
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -190,14 +226,27 @@ export const useTasksStore = defineStore('tasks', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao excluir tarefa')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao excluir tarefa')
         }
 
-        this.tasks = this.tasks.filter(t => t.id !== id)
-        this.totalTasks--
+        // Remove a tarefa da lista
+        const taskToRemove = this.tasks.find((t: Task) => t.id === id)
+        this.tasks = this.tasks.filter((t: Task) => t.id !== id)
         
+        // Atualiza as estatísticas
+        if (taskToRemove) {
+          this.stats.total--
+          if (taskToRemove.status === 'pending') this.stats.pending--
+          else if (taskToRemove.status === 'in_progress') this.stats.in_progress--
+          else if (taskToRemove.status === 'completed') this.stats.completed--
+          else if (taskToRemove.status === 'cancelled') this.stats.cancelled--
+        }
+        
+        return true
       } catch (error: any) {
         this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
@@ -219,14 +268,55 @@ export const useTasksStore = defineStore('tasks', {
         )
         
         if (!response.ok) {
-          throw new Error('Falha ao buscar tarefas próximas')
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar tarefas próximas')
         }
 
         const data = await response.json()
-        this.upcomingTasks = data.tasks
+        this.upcomingTasks = data.tasks || []
         
+        return this.upcomingTasks
       } catch (error: any) {
         this.error = error.message
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async fetchStats() {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const config = useRuntimeConfig()
+        const response = await fetch(
+          `${config.public.apiBase}/tasks/stats`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+          }
+        )
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Falha ao buscar estatísticas de tarefas')
+        }
+
+        const data = await response.json()
+        this.stats = data
+        
+        return this.stats
+      } catch (error: any) {
+        this.error = error.message
+        return {
+          total: 0,
+          pending: 0,
+          in_progress: 0,
+          completed: 0,
+          cancelled: 0
+        }
       } finally {
         this.loading = false
       }

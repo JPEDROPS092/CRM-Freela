@@ -1,15 +1,15 @@
-&lt;template>
-  &lt;NuxtLayout name="auth">
-    &lt;template #title>
+<template>
+  <NuxtLayout name="auth">
+    <template #title>
       Redefinir Senha
-    &lt;/template>
+    </template>
     
-    &lt;div class="space-y-6">
-      &lt;form @submit.prevent="handleSubmit" class="space-y-6">
-        &lt;div>
-          &lt;label for="password" class="form-label">Nova Senha&lt;/label>
-          &lt;div class="mt-1">
-            &lt;input 
+    <div class="space-y-6">
+      <form @submit.prevent="handleSubmit" class="space-y-6">
+        <div>
+          <label for="password" class="form-label">Nova Senha</label>
+          <div class="mt-1">
+            <input 
               id="password" 
               v-model="password" 
               name="password" 
@@ -19,14 +19,14 @@
               class="form-input" 
               :class="{ 'border-danger-500 focus:ring-danger-500 focus:border-danger-500': errors.password }"
             />
-            &lt;p v-if="errors.password" class="form-error">{{ errors.password }}&lt;/p>
-          &lt;/div>
-        &lt;/div>
+            <p v-if="errors.password" class="form-error">{{ errors.password }}</p>
+          </div>
+        </div>
 
-        &lt;div>
-          &lt;label for="confirmPassword" class="form-label">Confirmar Nova Senha&lt;/label>
-          &lt;div class="mt-1">
-            &lt;input 
+        <div>
+          <label for="confirmPassword" class="form-label">Confirmar Nova Senha</label>
+          <div class="mt-1">
+            <input 
               id="confirmPassword" 
               v-model="confirmPassword" 
               name="confirmPassword" 
@@ -36,25 +36,25 @@
               class="form-input"
               :class="{ 'border-danger-500 focus:ring-danger-500 focus:border-danger-500': errors.confirmPassword }"
             />
-            &lt;p v-if="errors.confirmPassword" class="form-error">{{ errors.confirmPassword }}&lt;/p>
-          &lt;/div>
-        &lt;/div>
+            <p v-if="errors.confirmPassword" class="form-error">{{ errors.confirmPassword }}</p>
+          </div>
+        </div>
 
-        &lt;div>
-          &lt;button 
+        <div>
+          <button 
             type="submit" 
             class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             :disabled="loading"
           >
             {{ loading ? 'Redefinindo...' : 'Redefinir Senha' }}
-          &lt;/button>
-        &lt;/div>
-      &lt;/form>
-    &lt;/div>
-  &lt;/NuxtLayout>
-&lt;/template>
+          </button>
+        </div>
+      </form>
+    </div>
+  </NuxtLayout>
+</template>
 
-&lt;script setup lang="ts">
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useAuthStore } from '~/store/auth'
 import { useRoute, useRouter } from 'vue-router'
@@ -118,4 +118,4 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
-&lt;/script>
+</script>
